@@ -3,105 +3,161 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Fintech</title>
+<title>FinTech</title>
+
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono&family=Syne:wght@700&display=swap" rel="stylesheet">
 
 <style>
 body {
-  font-family: Arial;
+  font-family: 'DM Mono', monospace;
   background:#0a0a0f;
-  color:white;
+  color:#f0f0f8;
+  margin:0;
+}
+
+.header {
   padding:20px;
+  border-bottom:1px solid #222;
+}
+
+.nav {
+  display:flex;
+  gap:10px;
+  padding:10px;
+  border-bottom:1px solid #222;
+}
+
+.nav button {
+  padding:8px 16px;
+  cursor:pointer;
+}
+
+.main {
+  padding:20px;
+}
+
+.card {
+  background:#16161f;
+  padding:20px;
+  margin-bottom:20px;
+  border-radius:10px;
+}
+
+input {
+  width:100%;
+  padding:10px;
+  margin-bottom:10px;
+  background:#111;
+  border:1px solid #333;
+  color:white;
 }
 
 button {
   padding:10px;
-  margin:5px;
+  background:#e8ff47;
+  border:none;
   cursor:pointer;
 }
 
-input {
-  padding:8px;
-  margin:5px;
-}
-
-.table {
-  margin-top:20px;
+.table div {
+  padding:10px;
+  border-bottom:1px solid #222;
 }
 </style>
 </head>
 
 <body>
 
-<h1>💸 Panel Financiero</h1>
+<div class="header">
+  <h1>FINTECH</h1>
+</div>
 
-<!-- NAV -->
-<button onclick="showTab('caja')">Caja</button>
-<button onclick="showTab('inversores')">Inversores</button>
+<div class="nav">
+  <button onclick="switchTab('caja')">Caja</button>
+  <button onclick="switchTab('inversores')">Inversores</button>
+</div>
+
+<div class="main">
 
 <!-- CAJA -->
-<div id="caja">
-  <h2>Movimientos</h2>
+<div id="tab-caja" class="tab">
+  <div class="card">
+    <h3>Nuevo Movimiento</h3>
+    <input id="caja-desc" placeholder="Descripción">
+    <input id="caja-monto" type="number" placeholder="Monto">
+    <button onclick="addCaja()">Agregar</button>
+  </div>
 
-  <input id="desc" placeholder="Descripción">
-  <input id="monto" type="number" placeholder="Monto">
-  <button onclick="addCaja()">Agregar</button>
-
-  <div id="caja-list"></div>
+  <div class="card">
+    <h3>Movimientos</h3>
+    <div id="caja-list"></div>
+  </div>
 </div>
 
 <!-- INVERSORES -->
-<div id="inversores" style="display:none;">
-  <h2>Inversores</h2>
+<div id="tab-inversores" class="tab" style="display:none;">
+  <div class="card">
+    <h3>Nuevo Inversor</h3>
+    <input id="inv-nombre" placeholder="Nombre">
+    <input id="inv-capital" type="number" placeholder="Capital">
+    <input id="inv-comision" type="number" placeholder="% Comisión">
+    <button onclick="addInversor()">Crear</button>
+  </div>
 
-  <input id="inv-nombre" placeholder="Nombre">
-  <input id="inv-capital" type="number" placeholder="Capital">
-  <input id="inv-comision" type="number" placeholder="% Comisión">
+  <div class="card">
+    <h3>Lista de Inversores</h3>
+    <div id="inv-list"></div>
+  </div>
+</div>
 
-  <button onclick="addInversor()">Crear</button>
-
-  <div id="inv-list"></div>
 </div>
 
 <script>
-let state = JSON.parse(localStorage.getItem('app_state')) || {
+
+// ─── STATE ───
+let state = JSON.parse(localStorage.getItem('fintech_state')) || {
   caja: [],
   inversores: []
 };
 
-// UI
-function showTab(tab){
-  document.getElementById('caja').style.display = 'none';
-  document.getElementById('inversores').style.display = 'none';
-  document.getElementById(tab).style.display = 'block';
-}
-
-// SAVE
+// ─── UTILS ───
 function save(){
-  localStorage.setItem('app_state', JSON.stringify(state));
+  localStorage.setItem('fintech_state', JSON.stringify(state));
 }
 
-// ───────── CAJA ─────────
+function fmt(n){
+  return '$' + Number(n).toLocaleString('es-AR');
+}
+
+// ─── NAV ───
+function switchTab(tab){
+  document.getElementById('tab-caja').style.display='none';
+  document.getElementById('tab-inversores').style.display='none';
+  document.getElementById('tab-'+tab).style.display='block';
+}
+
+// ─── CAJA ───
 function addCaja(){
-  const desc = document.getElementById('desc').value;
-  const monto = parseFloat(document.getElementById('monto').value);
+  const desc = document.getElementById('caja-desc').value;
+  const monto = parseFloat(document.getElementById('caja-monto').value);
 
   if(!desc || !monto) return alert("Completar datos");
 
-  state.caja.push({desc, monto});
+  state.caja.unshift({desc,monto});
   save();
   render();
 }
 
 function renderCaja(){
   const el = document.getElementById('caja-list');
-  el.innerHTML = '';
+  el.innerHTML='';
 
   state.caja.forEach(c=>{
-    el.innerHTML += `<div>${c.desc} - $${c.monto}</div>`;
+    el.innerHTML += `<div>${c.desc} — ${fmt(c.monto)}</div>`;
   });
 }
 
-// ───────── INVERSORES ─────────
+// ─── INVERSORES ───
 function addInversor(){
   const nombre = document.getElementById('inv-nombre').value;
   const capital = parseFloat(document.getElementById('inv-capital').value);
@@ -109,11 +165,11 @@ function addInversor(){
 
   if(!nombre || !capital) return alert("Datos inválidos");
 
-  state.inversores.push({
+  state.inversores.unshift({
     id: Date.now(),
     nombre,
     capital,
-    comision,
+    comision: comision || 0,
     movimientos: []
   });
 
@@ -123,7 +179,7 @@ function addInversor(){
 
 function renderInversores(){
   const el = document.getElementById('inv-list');
-  el.innerHTML = '';
+  el.innerHTML='';
 
   state.inversores.forEach(inv=>{
     const totalMov = inv.movimientos.reduce((a,m)=>a+m.monto,0);
@@ -131,28 +187,29 @@ function renderInversores(){
     const total = inv.capital + totalMov + ganancia;
 
     el.innerHTML += `
-      <div style="margin-bottom:10px;">
+      <div style="margin-bottom:15px;">
         <strong>${inv.nombre}</strong><br>
-        Capital: $${inv.capital}<br>
-        Ganancia: $${ganancia}<br>
-        Total: $${total}<br>
-        <button onclick="verInv(${inv.id})">Ver</button>
+        Capital: ${fmt(inv.capital)}<br>
+        Ganancia: ${fmt(ganancia)}<br>
+        Total: ${fmt(total)}<br>
+        <button onclick="openInv(${inv.id})">Ver Panel</button>
       </div>
     `;
   });
 }
 
-function verInv(id){
-  window.open('inversor.html?id=' + id);
+function openInv(id){
+  window.open('inversor.html?id='+id, '_blank');
 }
 
-// ───────── RENDER ─────────
+// ─── RENDER ───
 function render(){
   renderCaja();
   renderInversores();
 }
 
 render();
+
 </script>
 
 </body>
