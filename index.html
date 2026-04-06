@@ -2,10 +2,158 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>Fintech App</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fintech</title>
+
+<style>
+body {
+  font-family: Arial;
+  background:#0a0a0f;
+  color:white;
+  padding:20px;
+}
+
+button {
+  padding:10px;
+  margin:5px;
+  cursor:pointer;
+}
+
+input {
+  padding:8px;
+  margin:5px;
+}
+
+.table {
+  margin-top:20px;
+}
+</style>
 </head>
+
 <body>
-<h1>Fintech App funcionando 🚀</h1>
-<p>Subí tu HTML principal acá (reemplazá este archivo con el tuyo actualizado).</p>
+
+<h1>💸 Panel Financiero</h1>
+
+<!-- NAV -->
+<button onclick="showTab('caja')">Caja</button>
+<button onclick="showTab('inversores')">Inversores</button>
+
+<!-- CAJA -->
+<div id="caja">
+  <h2>Movimientos</h2>
+
+  <input id="desc" placeholder="Descripción">
+  <input id="monto" type="number" placeholder="Monto">
+  <button onclick="addCaja()">Agregar</button>
+
+  <div id="caja-list"></div>
+</div>
+
+<!-- INVERSORES -->
+<div id="inversores" style="display:none;">
+  <h2>Inversores</h2>
+
+  <input id="inv-nombre" placeholder="Nombre">
+  <input id="inv-capital" type="number" placeholder="Capital">
+  <input id="inv-comision" type="number" placeholder="% Comisión">
+
+  <button onclick="addInversor()">Crear</button>
+
+  <div id="inv-list"></div>
+</div>
+
+<script>
+let state = JSON.parse(localStorage.getItem('app_state')) || {
+  caja: [],
+  inversores: []
+};
+
+// UI
+function showTab(tab){
+  document.getElementById('caja').style.display = 'none';
+  document.getElementById('inversores').style.display = 'none';
+  document.getElementById(tab).style.display = 'block';
+}
+
+// SAVE
+function save(){
+  localStorage.setItem('app_state', JSON.stringify(state));
+}
+
+// ───────── CAJA ─────────
+function addCaja(){
+  const desc = document.getElementById('desc').value;
+  const monto = parseFloat(document.getElementById('monto').value);
+
+  if(!desc || !monto) return alert("Completar datos");
+
+  state.caja.push({desc, monto});
+  save();
+  render();
+}
+
+function renderCaja(){
+  const el = document.getElementById('caja-list');
+  el.innerHTML = '';
+
+  state.caja.forEach(c=>{
+    el.innerHTML += `<div>${c.desc} - $${c.monto}</div>`;
+  });
+}
+
+// ───────── INVERSORES ─────────
+function addInversor(){
+  const nombre = document.getElementById('inv-nombre').value;
+  const capital = parseFloat(document.getElementById('inv-capital').value);
+  const comision = parseFloat(document.getElementById('inv-comision').value);
+
+  if(!nombre || !capital) return alert("Datos inválidos");
+
+  state.inversores.push({
+    id: Date.now(),
+    nombre,
+    capital,
+    comision,
+    movimientos: []
+  });
+
+  save();
+  render();
+}
+
+function renderInversores(){
+  const el = document.getElementById('inv-list');
+  el.innerHTML = '';
+
+  state.inversores.forEach(inv=>{
+    const totalMov = inv.movimientos.reduce((a,m)=>a+m.monto,0);
+    const ganancia = totalMov * (inv.comision/100);
+    const total = inv.capital + totalMov + ganancia;
+
+    el.innerHTML += `
+      <div style="margin-bottom:10px;">
+        <strong>${inv.nombre}</strong><br>
+        Capital: $${inv.capital}<br>
+        Ganancia: $${ganancia}<br>
+        Total: $${total}<br>
+        <button onclick="verInv(${inv.id})">Ver</button>
+      </div>
+    `;
+  });
+}
+
+function verInv(id){
+  window.open('inversor.html?id=' + id);
+}
+
+// ───────── RENDER ─────────
+function render(){
+  renderCaja();
+  renderInversores();
+}
+
+render();
+</script>
+
 </body>
 </html>
