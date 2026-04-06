@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Inversor</title>
+</head>
+<body>
+
+<h1 id="nombre"></h1>
+<p id="capital"></p>
+<p id="ganancia"></p>
+<p id="total"></p>
+
+<script>
+const params = new URLSearchParams(window.location.search);
+const id = params.get('id');
+
+const state = JSON.parse(localStorage.getItem('fintech_state') || '{}');
+
+const inv = (state.inversores || []).find(i => i.id === id);
+
+if(inv){
+  const totalMov = inv.movimientos.reduce((a,m)=>a+m.monto,0);
+  const ganancia = totalMov * (inv.comision/100);
+  const total = inv.capital + totalMov + ganancia;
+
+  document.getElementById('nombre').innerText = inv.nombre;
+  document.getElementById('capital').innerText = 'Capital: $' + inv.capital;
+  document.getElementById('ganancia').innerText = 'Ganancia: $' + ganancia;
+  document.getElementById('total').innerText = 'Total: $' + total;
+}else{
+  document.body.innerHTML = "<h2>Inversor no encontrado</h2>";
+}
+</script>
+
+</body>
+</html>
